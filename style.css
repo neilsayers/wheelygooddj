@@ -131,6 +131,58 @@ body {
   94%      { transform: translate(90vw, 40vh); opacity: .65; }
 }
 
+.consent-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(19, 23, 41, 0.97);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.consent-banner p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  max-width: 52ch;
+}
+
+.consent-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.consent-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.consent-btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.consent-btn-primary {
+  background: var(--tier1);
+  border-color: var(--tier1);
+  color: #08150f;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bg-blob {
     animation: none;
