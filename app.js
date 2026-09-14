@@ -86,9 +86,11 @@ const wheelPaneEl = document.getElementById('wheel-pane');
 const resultsPaneEl = document.getElementById('results-pane');
 const resultsEl = document.getElementById('results');
 const advancedToggle = document.getElementById('advanced-toggle');
+const advancedToggleRow = document.getElementById('advanced-toggle-row');
 const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
 const btnDown = document.getElementById('btn-down');
+const energyIndicatorEl = document.querySelector('.energy-indicator');
 
 const wedgeEls = {};
 
@@ -136,6 +138,26 @@ function computeGeometry() {
   const arrowOffset = spacing * 0.82;
   btnUp.style.top = `${geo.cy - arrowOffset}px`;
   btnDown.style.top = `${geo.cy + arrowOffset}px`;
+
+  positionEnergyIndicator();
+}
+
+// Anchored to the inner (A) ring — the one closest to the indicator —
+// rather than whichever ring is selected, so it stays put when the
+// letter (A/B) changes instead of jumping sideways, and clears both
+// rings rather than just whichever one happened to be selected. Uses
+// the indicator's own measured width so it keeps clearing the wedges
+// even as its font sizes change. Never let the clamp push it past the
+// pane's clipped left edge on narrow screens.
+function positionEnergyIndicator() {
+  const halfWidth = energyIndicatorEl.offsetWidth / 2;
+  const wedgeRadius = wedgeDiameterPx() / 2;
+  const isNarrow = window.innerWidth <= 480;
+  const gap = isNarrow ? 4 : 60;
+  const floor = isNarrow ? 10 : 30;
+  const x = Math.max(geo.cx + geo.rA - wedgeRadius - gap - halfWidth, floor);
+  energyIndicatorEl.style.left = `${x}px`;
+  energyIndicatorEl.style.top = `${geo.cy}px`;
 }
 
 function shortestDelta(angle, from) {
@@ -201,36 +223,43 @@ function renderResults() {
 
   tiers.forEach(({ tier, title }) => {
     const group = compatible.filter((r) => r.tier === tier);
-    if (!group.length) return;
 
-    const section = document.createElement('div');
-    section.className = 'result-group';
-    const heading = document.createElement('h2');
-    heading.className = 'result-group-title';
-    heading.textContent = title;
-    section.appendChild(heading);
+    if (group.length) {
+      const section = document.createElement('div');
+      section.className = 'result-group';
+      const heading = document.createElement('h2');
+      heading.className = 'result-group-title';
+      heading.textContent = title;
+      section.appendChild(heading);
 
-    const list = document.createElement('div');
-    list.className = 'result-list';
+      const list = document.createElement('div');
+      list.className = 'result-list';
 
-    group.forEach((r) => {
-      const card = document.createElement('button');
-      card.className = `result-card tier-${tier}`;
-      card.innerHTML = `
-        <span class="result-key">${r.id}</span>
-        <span class="result-musical">${CAMELOT_TO_MUSICAL[r.id]}</span>
-        <span class="result-relation">${r.relation}</span>
-        <span class="result-desc">${r.description}</span>
-      `;
-      card.addEventListener('click', () => {
-        const m = r.id.match(/^(\d+)([AB])$/);
-        selectKey(parseInt(m[1], 10), m[2]);
+      group.forEach((r) => {
+        const card = document.createElement('button');
+        card.className = `result-card tier-${tier}`;
+        card.innerHTML = `
+          <span class="result-key">${r.id}</span>
+          <span class="result-musical">${CAMELOT_TO_MUSICAL[r.id]}</span>
+          <span class="result-relation">${r.relation}</span>
+          <span class="result-desc">${r.description}</span>
+        `;
+        card.addEventListener('click', () => {
+          const m = r.id.match(/^(\d+)([AB])$/);
+          selectKey(parseInt(m[1], 10), m[2]);
+        });
+        list.appendChild(card);
       });
-      list.appendChild(card);
-    });
 
-    section.appendChild(list);
-    resultsEl.appendChild(section);
+      section.appendChild(list);
+      resultsEl.appendChild(section);
+    }
+
+    // The advanced-transitions toggle lives between the two result groups,
+    // so users can switch it on right where the advanced list would appear.
+    if (tier === 1) {
+      resultsEl.appendChild(advancedToggleRow);
+    }
   });
 }
 
@@ -284,6 +313,7 @@ function selectKey(num, letter, velocity = 0) {
   state.selectedLetter = letter;
   localStorage.setItem('camelot:lastKey', keyId(num, letter));
   updateHighlights();
+  positionEnergyIndicator();
 
   const target = (num - 1) * 30;
   const delta = shortestDelta(target, state.rotation);

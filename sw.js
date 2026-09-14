@@ -1,4 +1,4 @@
-const CACHE_NAME = 'camelot-v1';
+const CACHE_NAME = 'camelot-v2';
 const ASSETS = [
   './',
   './index.html',

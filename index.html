@@ -45,29 +45,28 @@
 </script>
 </head>
 <body>
+<div class="bg-blobs" aria-hidden="true">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-blob bg-blob-4"></div>
+</div>
 <div class="app">
   <header class="app-header">
     <div class="header-left">
       <h1>Wheely Good DJ</h1>
       <p class="strapline">Go on - choose your key. The crowd will think you're a genius. I won't tell anybody if you won't...</p>
     </div>
-    <div class="toggle-column">
-      <label class="toggle">
-        <input type="checkbox" id="advanced-toggle">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        <span class="toggle-label">Advanced moves</span>
-      </label>
-      <label class="toggle">
-        <input type="checkbox" id="notes-toggle">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        <span class="toggle-label">Notes emphasis</span>
-      </label>
-    </div>
   </header>
 
   <div class="stage">
     <div id="wheel-pane" class="wheel-pane">
       <div id="wheel" class="wheel"></div>
+      <div class="energy-indicator" aria-hidden="true">
+        <span class="energy-sign energy-minus">&minus;</span>
+        <span class="energy-label">Energy</span>
+        <span class="energy-sign energy-plus">+</span>
+      </div>
       <div class="wheel-controls">
         <button id="btn-up" class="wheel-arrow" aria-label="Previous key">&#9650;</button>
         <button id="btn-down" class="wheel-arrow" aria-label="Next key">&#9660;</button>
@@ -75,7 +74,17 @@
     </div>
 
     <div id="results-pane" class="results-pane">
+      <label class="toggle toggle-notes">
+        <input type="checkbox" id="notes-toggle">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        <span class="toggle-label">Emphasise notes notation (e.g. Abm, not the Camelot number notation)</span>
+      </label>
       <div id="results" class="results"></div>
+      <label class="toggle toggle-advanced" id="advanced-toggle-row">
+        <input type="checkbox" id="advanced-toggle">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        <span class="toggle-label">Show advanced transitions</span>
+      </label>
     </div>
   </div>
 </div>
