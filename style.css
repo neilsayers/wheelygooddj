@@ -231,6 +231,28 @@ body {
   max-width: 46ch;
 }
 
+.app-footer {
+  flex: none;
+  padding-right: max(16px, env(safe-area-inset-right));
+  text-align: center;
+}
+
+.app-footer p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.app-footer a {
+  color: var(--text-dim);
+  text-decoration: underline;
+}
+
+.app-footer a:hover,
+.app-footer a:focus-visible {
+  color: var(--text);
+}
+
 .toggle {
   display: flex;
   align-items: center;
