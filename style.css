@@ -131,6 +131,10 @@ body {
   94%      { transform: translate(90vw, 40vh); opacity: .65; }
 }
 
+.consent-banner[hidden] {
+  display: none;
+}
+
 .consent-banner {
   position: fixed;
   left: 12px;
