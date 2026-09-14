@@ -1,0 +1,50 @@
+# --- HTTPS + canonical host ---
+RewriteEngine On
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://wheelygooddj.com%{REQUEST_URI} [L,R=301]
+
+RewriteCond %{HTTP_HOST} ^www\.wheelygooddj\.com$ [NC]
+RewriteRule ^ https://wheelygooddj.com%{REQUEST_URI} [L,R=301]
+
+# --- Compression ---
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/xml text/javascript
+  AddOutputFilterByType DEFLATE application/javascript application/json application/manifest+json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# --- Caching ---
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/manifest+json "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType image/png "access plus 1 week"
+  ExpiresByType image/x-icon "access plus 1 week"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Never let the browser/CDN cache the service worker itself, or updates won't be picked up
+  <FilesMatch "^sw\.js$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # Security headers
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'"
+  Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+
+# --- Misc ---
+Options -Indexes
+
+# Block public access to dotfiles/dotfolders and source notes
+RewriteRule "(^|/)\." - [F]
+<FilesMatch "\.md$">
+  Require all denied
+</FilesMatch>
