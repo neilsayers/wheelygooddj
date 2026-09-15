@@ -91,6 +91,7 @@ const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
 const btnDown = document.getElementById('btn-down');
 const energyIndicatorEl = document.querySelector('.energy-indicator');
+const wheelTracksEl = document.querySelector('.wheel-tracks');
 const trackAEl = document.querySelector('.track-a');
 const trackBEl = document.querySelector('.track-b');
 
@@ -158,6 +159,18 @@ function positionTracks() {
     el.style.left = `${geo.cx}px`;
     el.style.top = `${geo.cy}px`;
   });
+
+  // Fade the rings out towards the left, where the dots themselves have
+  // already faded to nothing, so the arc doesn't look like it "ends"
+  // arbitrarily. Centred on the rightmost point of the outer ring —
+  // near the selected wedge — so that side stays solid.
+  const fadeX = geo.cx + geo.rB;
+  const fadeY = geo.cy;
+  const rx = geo.rB * 1.3;
+  const ry = geo.cy;
+  const mask = `radial-gradient(ellipse ${rx}px ${ry}px at ${fadeX}px ${fadeY}px, black 8%, transparent 78%)`;
+  wheelTracksEl.style.maskImage = mask;
+  wheelTracksEl.style.webkitMaskImage = mask;
 }
 
 // Anchored to the inner (A) ring — the one closest to the indicator —

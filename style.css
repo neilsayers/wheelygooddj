@@ -354,8 +354,6 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
 }
 
 .track {
