@@ -347,6 +347,30 @@ body {
   inset: 0;
 }
 
+/* Faint rings under the wedges, tracing the two circles the dots sit
+   on, so the layout reads as "orbits" rather than scattered dots
+   before the spring animation settles anything into place. */
+.wheel-tracks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+}
+
+.track {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 30px solid rgba(255, 255, 255, 0.05);
+  transform: translate(-50%, -50%);
+  will-change: left, top, width, height;
+}
+
+.track-b {
+  border-color: rgba(255, 255, 255, 0.035);
+}
+
 .wedge {
   position: absolute;
   width: clamp(70px, 18vw, 110px);

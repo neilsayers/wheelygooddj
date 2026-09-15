@@ -91,6 +91,10 @@ const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
 const btnDown = document.getElementById('btn-down');
 const energyIndicatorEl = document.querySelector('.energy-indicator');
+const trackAEl = document.querySelector('.track-a');
+const trackBEl = document.querySelector('.track-b');
+
+const TRACK_WIDTH = 30;
 
 const wedgeEls = {};
 
@@ -140,6 +144,20 @@ function computeGeometry() {
   btnDown.style.top = `${geo.cy + arrowOffset}px`;
 
   positionEnergyIndicator();
+  positionTracks();
+}
+
+// Ring elements sit behind the wedges, centred on the same point and
+// sized to the same radii, so they read as the "orbits" the dots run
+// along rather than a separate decoration.
+function positionTracks() {
+  [[trackAEl, geo.rA], [trackBEl, geo.rB]].forEach(([el, r]) => {
+    const d = r * 2 + TRACK_WIDTH;
+    el.style.width = `${d}px`;
+    el.style.height = `${d}px`;
+    el.style.left = `${geo.cx}px`;
+    el.style.top = `${geo.cy}px`;
+  });
 }
 
 // Anchored to the inner (A) ring — the one closest to the indicator —
