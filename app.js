@@ -128,6 +128,7 @@ const wheelEl = document.getElementById('wheel');
 const wheelPaneEl = document.getElementById('wheel-pane');
 const resultsPaneEl = document.getElementById('results-pane');
 const resultsEl = document.getElementById('results');
+const resultsCloseBtn = document.getElementById('results-close');
 const advancedToggle = document.getElementById('advanced-toggle');
 const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
@@ -457,6 +458,7 @@ function selectKey(num, letter, velocity = 0) {
   positionEnergyIndicator();
 
   rotateToEffective(velocity);
+  resultsEl.classList.add('is-open');
 }
 
 /* ---------------------------------------------------------------------- */
@@ -528,10 +530,16 @@ function endDrag() {
   updateHighlights();
 
   rotateToEffective(velocity);
+  resultsEl.classList.add('is-open');
 }
 
 wheelPaneEl.addEventListener('pointerup', endDrag);
 wheelPaneEl.addEventListener('pointercancel', endDrag);
+
+// Mobile-only close for the results modal (see #results in the
+// max-width: 700px block in style.css) — a no-op on desktop, where
+// #results is never position: fixed and .is-open has no visual effect.
+resultsCloseBtn.addEventListener('click', () => resultsEl.classList.remove('is-open'));
 
 btnUp.addEventListener('click', () => selectKey(state.selectedNumber - 1, state.selectedLetter));
 btnDown.addEventListener('click', () => selectKey(state.selectedNumber + 1, state.selectedLetter));
@@ -558,29 +566,13 @@ function handleBpmInput() {
   updateHighlights();
   state.settled = true;
   resultsPaneEl.classList.add('is-visible');
+  resultsEl.classList.add('is-open');
   renderResults();
   rotateToEffective(0, { silent: true });
 }
 
-function handleBpmBlur(input, key) {
-  const clamped = clampBpm(parseFloat(input.value));
-  if (clamped != null) input.value = String(clamped);
-  state[key] = clamped;
-  localStorage.setItem(
-    key === 'bpmOriginal' ? 'camelot:bpmOriginal' : 'camelot:bpmActual',
-    clamped != null ? String(clamped) : ''
-  );
-  updateHighlights();
-  state.settled = true;
-  resultsPaneEl.classList.add('is-visible');
-  renderResults();
-  rotateToEffective(0, { silent: true });
-}
-
-bpmOriginalInput.addEventListener('input', handleBpmInput);
-bpmActualInput.addEventListener('input', handleBpmInput);
-bpmOriginalInput.addEventListener('blur', () => handleBpmBlur(bpmOriginalInput, 'bpmOriginal'));
-bpmActualInput.addEventListener('blur', () => handleBpmBlur(bpmActualInput, 'bpmActual'));
+bpmOriginalInput.addEventListener('change', handleBpmInput);
+bpmActualInput.addEventListener('change', handleBpmInput);
 
 notesToggle.addEventListener('change', (e) => {
   document.body.classList.toggle('emphasize-notes', e.target.checked);
@@ -592,6 +584,17 @@ notesToggle.addEventListener('change', (e) => {
 /* ---------------------------------------------------------------------- */
 
 buildWheel();
+
+function populateBpmSelect(select) {
+  for (let bpm = BPM_MIN; bpm <= BPM_MAX; bpm++) {
+    const option = document.createElement('option');
+    option.value = String(bpm);
+    option.textContent = String(bpm);
+    select.appendChild(option);
+  }
+}
+populateBpmSelect(bpmOriginalInput);
+populateBpmSelect(bpmActualInput);
 
 const storedShowAdvanced = localStorage.getItem('camelot:showAdvanced');
 state.showAdvanced = storedShowAdvanced === null ? true : storedShowAdvanced === '1';
