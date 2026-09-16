@@ -400,9 +400,15 @@ function setSettled(isSettled) {
 
 let rafId = null;
 
-function animateRotationTo(target, initialVelocity = 0) {
+// `silent` skips the results-pane hide/show around the animation. Click and
+// drag use the normal (non-silent) path, since the destination key is only
+// known once the gesture ends. A BPM edit already knows its destination the
+// instant you type, so hiding the results while the wheel catches up just
+// reads as a flicker — silent mode updates the results immediately and only
+// animates the wheel's position underneath.
+function animateRotationTo(target, initialVelocity = 0, { silent = false } = {}) {
   if (rafId) cancelAnimationFrame(rafId);
-  setSettled(false);
+  if (!silent) setSettled(false);
 
   let pos = state.rotation;
   let vel = initialVelocity;
@@ -425,7 +431,7 @@ function animateRotationTo(target, initialVelocity = 0) {
       state.rotation = target;
       renderWheelPositions();
       rafId = null;
-      setSettled(true);
+      if (!silent) setSettled(true);
     }
   }
 
@@ -435,11 +441,11 @@ function animateRotationTo(target, initialVelocity = 0) {
 // Rotation always targets the effective key, not necessarily the one that
 // was just clicked/dragged/typed — if a BPM shift is active, the wheel
 // settles on the shifted key instead.
-function rotateToEffective(velocity = 0) {
+function rotateToEffective(velocity = 0, opts) {
   const effective = getEffectiveKey();
   const target = (effective.num - 1) * 30;
   const delta = shortestDelta(target, state.rotation);
-  animateRotationTo(state.rotation + delta, velocity);
+  animateRotationTo(state.rotation + delta, velocity, opts);
 }
 
 function selectKey(num, letter, velocity = 0) {
@@ -550,7 +556,10 @@ function handleBpmInput() {
   localStorage.setItem('camelot:bpmOriginal', state.bpmOriginal != null ? String(state.bpmOriginal) : '');
   localStorage.setItem('camelot:bpmActual', state.bpmActual != null ? String(state.bpmActual) : '');
   updateHighlights();
-  rotateToEffective();
+  state.settled = true;
+  resultsPaneEl.classList.add('is-visible');
+  renderResults();
+  rotateToEffective(0, { silent: true });
 }
 
 function handleBpmBlur(input, key) {
@@ -562,7 +571,10 @@ function handleBpmBlur(input, key) {
     clamped != null ? String(clamped) : ''
   );
   updateHighlights();
-  rotateToEffective();
+  state.settled = true;
+  resultsPaneEl.classList.add('is-visible');
+  renderResults();
+  rotateToEffective(0, { silent: true });
 }
 
 bpmOriginalInput.addEventListener('input', handleBpmInput);
@@ -581,7 +593,8 @@ notesToggle.addEventListener('change', (e) => {
 
 buildWheel();
 
-state.showAdvanced = localStorage.getItem('camelot:showAdvanced') === '1';
+const storedShowAdvanced = localStorage.getItem('camelot:showAdvanced');
+state.showAdvanced = storedShowAdvanced === null ? true : storedShowAdvanced === '1';
 advancedToggle.checked = state.showAdvanced;
 
 const emphasizeNotes = localStorage.getItem('camelot:emphasizeNotes') === '1';
