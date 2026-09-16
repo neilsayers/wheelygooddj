@@ -6,6 +6,7 @@
   --text: #f4f2ee;
   --text-dim: #9a9dbd;
   --accent: #ff3d81;
+  --accent-blue: #4da3ff;
   --tier1: #35e08c;
   --tier2: #ffb648;
   --border: #262c4a;
@@ -309,6 +310,84 @@ body {
   color: var(--text-dim);
 }
 
+.bpm-panel {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bpm-panel-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin: 0 0 8px;
+}
+
+.bpm-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.bpm-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bpm-field-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.bpm-field input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 8px 10px;
+}
+
+.bpm-field input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.bpm-readout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  min-height: 1.1em;
+  font-size: 0.78rem;
+  color: var(--accent-blue);
+}
+
+.bpm-actual-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  color: #041226;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.bpm-actual-text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 8px;
+}
+
 .toggle-notes {
   margin-bottom: 8px;
   padding-bottom: 8px;
@@ -316,8 +395,9 @@ body {
 }
 
 .toggle-advanced {
-  margin-top: 4px;
-  padding: 12px 14px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .toggle-advanced .toggle-label {
@@ -441,6 +521,25 @@ body.emphasize-notes .wedge-note {
 .wedge.is-tier2 {
   border-color: var(--tier2);
   box-shadow: 0 0 0 3px rgba(255, 182, 72, 0.18);
+}
+
+/* When a BPM shift is active, the effective (shifted) key takes over the
+   "selected" slot in blue, rather than pink, so it reads as the one
+   that's actually driving the wheel and the results list. */
+.wedge.is-selected.is-actual {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #041226;
+  box-shadow: 0 0 0 5px rgba(77, 163, 255, 0.3);
+}
+
+/* The original (track-printed) key steps back to a faded pink reference
+   wherever it lands, once the effective key has taken the spotlight. */
+.wedge.is-original-faded {
+  background: rgba(255, 61, 129, 0.28);
+  border-color: rgba(255, 61, 129, 0.45);
+  color: var(--text);
+  box-shadow: 0 0 0 3px rgba(255, 61, 129, 0.1);
 }
 
 .energy-indicator {

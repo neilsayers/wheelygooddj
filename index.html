@@ -83,17 +83,31 @@
     </div>
 
     <div id="results-pane" class="results-pane">
+      <div class="bpm-panel" id="bpm-panel">
+        <div class="bpm-panel-title">Playing at a different tempo?</div>
+        <div class="bpm-fields">
+          <label class="bpm-field">
+            <span class="bpm-field-label">Original BPM</span>
+            <input type="number" id="bpm-original" min="110" max="140" step="1" value="122" inputmode="numeric">
+          </label>
+          <label class="bpm-field">
+            <span class="bpm-field-label">Actual BPM</span>
+            <input type="number" id="bpm-actual" min="110" max="140" step="1" value="122" inputmode="numeric">
+          </label>
+        </div>
+        <p class="bpm-readout" id="bpm-readout" aria-live="polite"></p>
+      </div>
       <label class="toggle toggle-notes">
         <input type="checkbox" id="notes-toggle">
         <span class="toggle-track"><span class="toggle-thumb"></span></span>
         <span class="toggle-label">Emphasise notes notation (e.g. Abm, not the Camelot number notation)</span>
       </label>
-      <div id="results" class="results"></div>
       <label class="toggle toggle-advanced" id="advanced-toggle-row">
         <input type="checkbox" id="advanced-toggle">
         <span class="toggle-track"><span class="toggle-thumb"></span></span>
         <span class="toggle-label">Show advanced transitions</span>
       </label>
+      <div id="results" class="results"></div>
     </div>
   </div>
 

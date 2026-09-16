@@ -31,8 +31,45 @@ function mod12(n) {
   return ((n - 1) % 12 + 12) % 12 + 1;
 }
 
+const BPM_MIN = 110;
+const BPM_MAX = 140;
+
+/**
+ * A DJ playing a track off its natural tempo (no keylock) shifts its pitch
+ * by the same ratio as the tempo change, so the "effective" key isn't the
+ * one printed on the track. Semitones moved = 12 * log2(actual/original).
+ * On the Camelot wheel a semitone is a +7 step (see the "Semitone Up/Down"
+ * relations above), so that many semitones just walks the wheel by 7s.
+ * Returns null when there's no whole-semitone shift to show.
+ */
+function computeActualKey(num, letter, originalBpm, actualBpm) {
+  if (!originalBpm || !actualBpm || originalBpm === actualBpm) return null;
+  const semitones = 12 * Math.log2(actualBpm / originalBpm);
+  const rounded = Math.round(semitones);
+  if (rounded === 0) return null;
+  const actualNum = mod12(num + rounded * 7);
+  return { id: keyId(actualNum, letter), num: actualNum, letter, rounded };
+}
+
 function keyId(num, letter) {
   return `${num}${letter}`;
+}
+
+/**
+ * The key that should actually drive the wheel and results: the BPM-shifted
+ * key when a shift is active, otherwise whatever's selected. Everything
+ * downstream (rotation target, compatible-key list, "selected" styling)
+ * reads from this rather than state.selectedNumber/selectedLetter directly.
+ */
+function getEffectiveKey() {
+  const actual = computeActualKey(
+    state.selectedNumber,
+    state.selectedLetter,
+    state.bpmOriginal,
+    state.bpmActual
+  );
+  if (actual) return { num: actual.num, letter: actual.letter, shifted: true };
+  return { num: state.selectedNumber, letter: state.selectedLetter, shifted: false };
 }
 
 function otherLetter(letter) {
@@ -76,6 +113,12 @@ const state = {
   showAdvanced: false,
   rotation: 0, // degrees, continuous; (selectedNumber-1)*30 when settled
   settled: true,
+  bpmOriginal: 122,
+  bpmActual: 122,
+  // The original (track-printed) key's wedge id, set only while a BPM
+  // shift is active — the effective key takes over as "selected" and
+  // this one is shown as a faded reference instead.
+  originalFadedKeyId: null,
 };
 
 // Screen geometry for the crescent, recomputed on resize.
@@ -86,10 +129,12 @@ const wheelPaneEl = document.getElementById('wheel-pane');
 const resultsPaneEl = document.getElementById('results-pane');
 const resultsEl = document.getElementById('results');
 const advancedToggle = document.getElementById('advanced-toggle');
-const advancedToggleRow = document.getElementById('advanced-toggle-row');
 const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
 const btnDown = document.getElementById('btn-down');
+const bpmOriginalInput = document.getElementById('bpm-original');
+const bpmActualInput = document.getElementById('bpm-actual');
+const bpmReadoutEl = document.getElementById('bpm-readout');
 const energyIndicatorEl = document.querySelector('.energy-indicator');
 const wheelTracksEl = document.querySelector('.wheel-tracks');
 const trackAEl = document.querySelector('.track-a');
@@ -221,28 +266,83 @@ function renderWheelPositions() {
       el.style.zIndex = z;
     });
   });
+
+  // The wheel now rotates to the effective (BPM-shifted) key, so the
+  // original track key can land many steps away — past the point where
+  // the fade above would hide it entirely. Pin it to a fixed, legible
+  // "faded" look regardless of how far it lands, rather than letting it
+  // vanish for the (common) case of a several-BPM tempo bump.
+  if (state.originalFadedKeyId) {
+    const el = wedgeEls[state.originalFadedKeyId];
+    if (el) {
+      el.style.opacity = '0.55';
+      el.style.setProperty('--s', 0.85);
+      el.style.pointerEvents = 'auto';
+      el.style.zIndex = '150';
+    }
+  }
 }
 
 function updateHighlights(previewNumber) {
+  // previewNumber (live drag preview) stands in for the candidate original
+  // key; the actual shift math and effective-key resolution still apply
+  // on top of it, so the preview shows exactly what letting go would give.
   const num = previewNumber != null ? previewNumber : state.selectedNumber;
   const letter = state.selectedLetter;
 
   document.querySelectorAll('.wedge').forEach((el) => {
-    el.classList.remove('is-selected', 'is-tier1', 'is-tier2');
+    el.classList.remove('is-selected', 'is-tier1', 'is-tier2', 'is-actual', 'is-original-faded');
   });
-  const selEl = wedgeEls[keyId(num, letter)];
-  if (selEl) selEl.classList.add('is-selected');
 
-  const compatible = getCompatibleKeys(num, letter);
+  const actual = computeActualKey(num, letter, state.bpmOriginal, state.bpmActual);
+  const effNum = actual ? actual.num : num;
+  const effLetter = actual ? actual.letter : letter;
+
+  const selEl = wedgeEls[keyId(effNum, effLetter)];
+  if (selEl) {
+    selEl.classList.add('is-selected');
+    if (actual) selEl.classList.add('is-actual');
+  }
+
+  if (actual) {
+    const originalEl = wedgeEls[keyId(num, letter)];
+    if (originalEl) originalEl.classList.add('is-original-faded');
+  }
+  state.originalFadedKeyId = actual ? keyId(num, letter) : null;
+
+  const compatible = getCompatibleKeys(effNum, effLetter);
   compatible.forEach((r) => {
     if (!state.showAdvanced && r.tier === 2) return;
     const el = wedgeEls[r.id];
     if (el) el.classList.add(r.tier === 1 ? 'is-tier1' : 'is-tier2');
   });
+
+  renderWheelPositions();
+  updateBpmReadout(actual, num, letter);
+}
+
+function updateBpmReadout(actual, origNum, origLetter) {
+  if (!bpmReadoutEl) return;
+  if (!actual) {
+    bpmReadoutEl.innerHTML = '';
+    return;
+  }
+  const sign = actual.rounded > 0 ? '+' : '';
+  const semitoneWord = Math.abs(actual.rounded) === 1 ? 'semitone' : 'semitones';
+  const origId = keyId(origNum, origLetter);
+  // The wheel now shows the effective key front and centre, so the badge's
+  // job is to keep the original (track-printed) key legible as text too —
+  // useful for screen readers, and as a fallback if it lands somewhere
+  // cluttered on the wheel.
+  bpmReadoutEl.innerHTML =
+    `<span class="bpm-actual-badge">${actual.id}</span>` +
+    `<span class="bpm-actual-text">Showing mixes for <strong>${CAMELOT_TO_MUSICAL[actual.id]}</strong> ` +
+    `(${sign}${actual.rounded} ${semitoneWord}) — printed key was ${origId} (${CAMELOT_TO_MUSICAL[origId]}).</span>`;
 }
 
 function renderResults() {
-  const compatible = getCompatibleKeys(state.selectedNumber, state.selectedLetter).filter(
+  const effective = getEffectiveKey();
+  const compatible = getCompatibleKeys(effective.num, effective.letter).filter(
     (r) => state.showAdvanced || r.tier === 1
   );
 
@@ -284,12 +384,6 @@ function renderResults() {
 
       section.appendChild(list);
       resultsEl.appendChild(section);
-    }
-
-    // The advanced-transitions toggle lives between the two result groups,
-    // so users can switch it on right where the advanced list would appear.
-    if (tier === 1) {
-      resultsEl.appendChild(advancedToggleRow);
     }
   });
 }
@@ -338,6 +432,16 @@ function animateRotationTo(target, initialVelocity = 0) {
   rafId = requestAnimationFrame(step);
 }
 
+// Rotation always targets the effective key, not necessarily the one that
+// was just clicked/dragged/typed — if a BPM shift is active, the wheel
+// settles on the shifted key instead.
+function rotateToEffective(velocity = 0) {
+  const effective = getEffectiveKey();
+  const target = (effective.num - 1) * 30;
+  const delta = shortestDelta(target, state.rotation);
+  animateRotationTo(state.rotation + delta, velocity);
+}
+
 function selectKey(num, letter, velocity = 0) {
   num = mod12(num);
   state.selectedNumber = num;
@@ -346,9 +450,7 @@ function selectKey(num, letter, velocity = 0) {
   updateHighlights();
   positionEnergyIndicator();
 
-  const target = (num - 1) * 30;
-  const delta = shortestDelta(target, state.rotation);
-  animateRotationTo(state.rotation + delta, velocity);
+  rotateToEffective(velocity);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -419,7 +521,7 @@ function endDrag() {
   localStorage.setItem('camelot:lastKey', keyId(num, state.selectedLetter));
   updateHighlights();
 
-  animateRotationTo(targetRotation, velocity);
+  rotateToEffective(velocity);
 }
 
 wheelPaneEl.addEventListener('pointerup', endDrag);
@@ -434,6 +536,39 @@ advancedToggle.addEventListener('change', (e) => {
   updateHighlights();
   if (state.settled) renderResults();
 });
+
+function clampBpm(v) {
+  if (!Number.isFinite(v)) return null;
+  return Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(v)));
+}
+
+function handleBpmInput() {
+  const o = parseFloat(bpmOriginalInput.value);
+  const a = parseFloat(bpmActualInput.value);
+  state.bpmOriginal = Number.isFinite(o) ? o : null;
+  state.bpmActual = Number.isFinite(a) ? a : null;
+  localStorage.setItem('camelot:bpmOriginal', state.bpmOriginal != null ? String(state.bpmOriginal) : '');
+  localStorage.setItem('camelot:bpmActual', state.bpmActual != null ? String(state.bpmActual) : '');
+  updateHighlights();
+  rotateToEffective();
+}
+
+function handleBpmBlur(input, key) {
+  const clamped = clampBpm(parseFloat(input.value));
+  if (clamped != null) input.value = String(clamped);
+  state[key] = clamped;
+  localStorage.setItem(
+    key === 'bpmOriginal' ? 'camelot:bpmOriginal' : 'camelot:bpmActual',
+    clamped != null ? String(clamped) : ''
+  );
+  updateHighlights();
+  rotateToEffective();
+}
+
+bpmOriginalInput.addEventListener('input', handleBpmInput);
+bpmActualInput.addEventListener('input', handleBpmInput);
+bpmOriginalInput.addEventListener('blur', () => handleBpmBlur(bpmOriginalInput, 'bpmOriginal'));
+bpmActualInput.addEventListener('blur', () => handleBpmBlur(bpmActualInput, 'bpmActual'));
 
 notesToggle.addEventListener('change', (e) => {
   document.body.classList.toggle('emphasize-notes', e.target.checked);
@@ -453,6 +588,13 @@ const emphasizeNotes = localStorage.getItem('camelot:emphasizeNotes') === '1';
 notesToggle.checked = emphasizeNotes;
 document.body.classList.toggle('emphasize-notes', emphasizeNotes);
 
+const savedBpmOriginal = clampBpm(parseFloat(localStorage.getItem('camelot:bpmOriginal')));
+const savedBpmActual = clampBpm(parseFloat(localStorage.getItem('camelot:bpmActual')));
+state.bpmOriginal = savedBpmOriginal != null ? savedBpmOriginal : state.bpmOriginal;
+state.bpmActual = savedBpmActual != null ? savedBpmActual : state.bpmActual;
+bpmOriginalInput.value = String(state.bpmOriginal);
+bpmActualInput.value = String(state.bpmActual);
+
 const lastKey = localStorage.getItem('camelot:lastKey');
 if (lastKey) {
   const m = lastKey.match(/^(\d+)([AB])$/);
@@ -461,7 +603,7 @@ if (lastKey) {
     state.selectedLetter = m[2];
   }
 }
-state.rotation = (state.selectedNumber - 1) * 30;
+state.rotation = (getEffectiveKey().num - 1) * 30;
 
 computeGeometry();
 renderWheelPositions();
