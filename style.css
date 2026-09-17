@@ -703,8 +703,11 @@ body.emphasize-notes .wedge-note {
     overflow-y: auto;
   }
 
+  /* The settings block (BPM + toggles) no longer sits inline below the
+     wheel — it lives in the settings drawer now — so the wheel is the
+     only flowed child left in .stage and can take the full height. */
   .wheel-pane {
-    flex: 0 0 56vh;
+    flex: 1 1 auto;
     min-height: 320px;
     height: auto;
     width: 100%;

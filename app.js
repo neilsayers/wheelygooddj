@@ -405,7 +405,7 @@ const MOBILE_MQ = window.matchMedia('(max-width: 700px)');
 // tapped. Instead we wait, so the wheel stays uncluttered long enough for
 // another tap to register; each new selection pushes the wait back out
 // rather than opening on a stale target.
-const RESULTS_OPEN_DELAY_MS = 1400;
+const RESULTS_OPEN_DELAY_MS = 1200;
 let resultsOpenTimer = null;
 
 function openSettingsDrawer() {
