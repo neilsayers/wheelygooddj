@@ -427,6 +427,18 @@ body {
   font-weight: 600;
 }
 
+.settings-toggle {
+  display: none;
+}
+
+.settings-drawer-header {
+  display: none;
+}
+
+.settings-close {
+  display: none;
+}
+
 .stage {
   flex: 1;
   min-height: 0;
@@ -676,12 +688,13 @@ body.emphasize-notes .wedge-note {
    side-by-side without the wheel's wedges clipping off the pane edge
    (the wheel's radius is sized off the pane's height, so a half-width
    column makes it badly overflow). Instead: wheel on top at full
-   width, BPM + toggles as a persistent settings block underneath, and
-   the transitions list becomes a full-screen modal that slides up
-   once a key is picked, rather than a third thing fighting for
-   vertical space. `.results-pane` becomes `display: contents` so its
-   children (bpm-panel, toggles, #results) join `.stage`'s own flex
-   flow directly, without needing to move them in the markup. */
+   width; BPM + toggles move into a hidden settings drawer opened via a
+   floating toggle button (they used to sit inline and crowded small
+   screens); and the transitions list becomes a bottom sheet, rising
+   only to the screen's midpoint, once a key is picked. `.results-pane`
+   becomes `display: contents` so its children (settings-toggle,
+   settings-drawer, #results) join `.stage`'s own flex flow directly,
+   without needing to move them in the markup. */
 @media (max-width: 700px) {
   .stage {
     display: flex;
@@ -701,18 +714,41 @@ body.emphasize-notes .wedge-note {
     display: contents;
   }
 
+  /* The transitions list now rises only as far as the screen's midpoint
+     (leaving the wheel visible and tappable above it) and eases in more
+     slowly/obviously than the old instant-feeling 0.3s snap — see the
+     RESULTS_OPEN_DELAY_MS debounce in app.js, which also holds off calling
+     .is-open at all for a beat after a key is picked, so the sheet doesn't
+     appear to pounce the moment a wedge is tapped. */
   #results {
     position: fixed;
-    inset: 0;
+    top: 50%;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 500;
     margin: 0;
     background: var(--bg);
-    padding: max(64px, calc(env(safe-area-inset-top) + 56px)) max(16px, env(safe-area-inset-right))
-      max(24px, env(safe-area-inset-bottom)) 16px;
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+    padding: 22px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) 16px;
     overflow-y: auto;
     transform: translateY(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
+  }
+
+  #results::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
   }
 
   #results.is-open {
@@ -723,7 +759,7 @@ body.emphasize-notes .wedge-note {
   .results-close {
     display: none;
     position: fixed;
-    top: max(12px, env(safe-area-inset-top));
+    top: calc(50% + 12px);
     right: max(12px, env(safe-area-inset-right));
     z-index: 501;
     width: 40px;
@@ -742,6 +778,94 @@ body.emphasize-notes .wedge-note {
 
   #results.is-open ~ .results-close {
     display: flex;
+  }
+
+  /* Settings (BPM + toggles) move off the main scroll — on small phones
+     they were crowding the bottom of the page — behind a floating toggle
+     button that opens them as their own bottom-sheet drawer. */
+  .settings-toggle {
+    display: flex;
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    z-index: 700;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: rgba(23, 22, 29, 0.85);
+    backdrop-filter: blur(4px);
+    color: var(--text);
+    font-size: 1.3rem;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .settings-drawer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 80vh;
+    z-index: 600;
+    margin: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+    padding: 16px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) 16px;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .settings-drawer::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .settings-drawer.is-open {
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .settings-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .settings-drawer-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  .settings-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1.3rem;
+    line-height: 1;
+    padding: 0;
   }
 }
 

@@ -129,6 +129,9 @@ const wheelPaneEl = document.getElementById('wheel-pane');
 const resultsPaneEl = document.getElementById('results-pane');
 const resultsEl = document.getElementById('results');
 const resultsCloseBtn = document.getElementById('results-close');
+const settingsToggleBtn = document.getElementById('settings-toggle');
+const settingsDrawerEl = document.getElementById('settings-drawer');
+const settingsCloseBtn = document.getElementById('settings-close');
 const advancedToggle = document.getElementById('advanced-toggle');
 const notesToggle = document.getElementById('notes-toggle');
 const btnUp = document.getElementById('btn-up');
@@ -389,6 +392,57 @@ function renderResults() {
   });
 }
 
+/* ---------------------------------------------------------------------- */
+/* Mobile transitions sheet + settings drawer                             */
+/* ---------------------------------------------------------------------- */
+
+// Matches the .stage layout breakpoint in style.css where #results becomes
+// a bottom sheet instead of the desktop side-by-side pane.
+const MOBILE_MQ = window.matchMedia('(max-width: 700px)');
+
+// On mobile, a fresh key selection doesn't pop the transitions sheet up
+// immediately — that read as the sheet pouncing the instant a wedge was
+// tapped. Instead we wait, so the wheel stays uncluttered long enough for
+// another tap to register; each new selection pushes the wait back out
+// rather than opening on a stale target.
+const RESULTS_OPEN_DELAY_MS = 1400;
+let resultsOpenTimer = null;
+
+function openSettingsDrawer() {
+  settingsDrawerEl.classList.add('is-open');
+  settingsToggleBtn.setAttribute('aria-expanded', 'true');
+  if (resultsOpenTimer) {
+    clearTimeout(resultsOpenTimer);
+    resultsOpenTimer = null;
+  }
+  resultsEl.classList.remove('is-open');
+}
+
+function closeSettingsDrawer() {
+  settingsDrawerEl.classList.remove('is-open');
+  settingsToggleBtn.setAttribute('aria-expanded', 'false');
+}
+
+function scheduleResultsOpen() {
+  if (!MOBILE_MQ.matches) {
+    resultsEl.classList.add('is-open');
+    return;
+  }
+  closeSettingsDrawer();
+  if (resultsOpenTimer) clearTimeout(resultsOpenTimer);
+  resultsOpenTimer = setTimeout(() => {
+    resultsOpenTimer = null;
+    resultsEl.classList.add('is-open');
+  }, RESULTS_OPEN_DELAY_MS);
+}
+
+settingsToggleBtn.addEventListener('click', () => {
+  if (settingsDrawerEl.classList.contains('is-open')) closeSettingsDrawer();
+  else openSettingsDrawer();
+});
+
+settingsCloseBtn.addEventListener('click', closeSettingsDrawer);
+
 function setSettled(isSettled) {
   state.settled = isSettled;
   resultsPaneEl.classList.toggle('is-visible', isSettled);
@@ -458,7 +512,7 @@ function selectKey(num, letter, velocity = 0) {
   positionEnergyIndicator();
 
   rotateToEffective(velocity);
-  resultsEl.classList.add('is-open');
+  scheduleResultsOpen();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -530,7 +584,7 @@ function endDrag() {
   updateHighlights();
 
   rotateToEffective(velocity);
-  resultsEl.classList.add('is-open');
+  scheduleResultsOpen();
 }
 
 wheelPaneEl.addEventListener('pointerup', endDrag);
@@ -566,6 +620,11 @@ function handleBpmInput() {
   updateHighlights();
   state.settled = true;
   resultsPaneEl.classList.add('is-visible');
+  if (resultsOpenTimer) {
+    clearTimeout(resultsOpenTimer);
+    resultsOpenTimer = null;
+  }
+  closeSettingsDrawer();
   resultsEl.classList.add('is-open');
   renderResults();
   rotateToEffective(0, { silent: true });
