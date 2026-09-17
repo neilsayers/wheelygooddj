@@ -139,7 +139,6 @@ const btnDown = document.getElementById('btn-down');
 const bpmOriginalInput = document.getElementById('bpm-original');
 const bpmActualInput = document.getElementById('bpm-actual');
 const bpmReadoutEl = document.getElementById('bpm-readout');
-const energyIndicatorEl = document.querySelector('.energy-indicator');
 const wheelTracksEl = document.querySelector('.wheel-tracks');
 const trackAEl = document.querySelector('.track-a');
 const trackBEl = document.querySelector('.track-b');
@@ -171,12 +170,12 @@ function buildWheel() {
 }
 
 function wedgeDiameterPx() {
-  return Math.min(110, Math.max(70, window.innerWidth * 0.18));
+  return Math.min(118, Math.max(76, window.innerWidth * 0.19));
 }
 
 function computeGeometry() {
   const rect = wheelPaneEl.getBoundingClientRect();
-  const spacing = Math.max(130, Math.min(rect.height * 0.22, 190));
+  const spacing = Math.max(115, Math.min(rect.height * 0.19, 175));
   const rAvg = spacing / Math.sin(Math.PI / 6); // px per 30° step, at the midline between rings
   const wedgeD = wedgeDiameterPx();
   const halfGap = wedgeD * 0.58; // fixed separation between rings, independent of wheel scale
@@ -193,7 +192,6 @@ function computeGeometry() {
   btnUp.style.top = `${geo.cy - arrowOffset}px`;
   btnDown.style.top = `${geo.cy + arrowOffset}px`;
 
-  positionEnergyIndicator();
   positionTracks();
 }
 
@@ -220,24 +218,6 @@ function positionTracks() {
   const mask = `radial-gradient(ellipse ${rx}px ${ry}px at ${fadeX}px ${fadeY}px, black 8%, transparent 78%)`;
   wheelTracksEl.style.maskImage = mask;
   wheelTracksEl.style.webkitMaskImage = mask;
-}
-
-// Anchored to the inner (A) ring — the one closest to the indicator —
-// rather than whichever ring is selected, so it stays put when the
-// letter (A/B) changes instead of jumping sideways, and clears both
-// rings rather than just whichever one happened to be selected. Uses
-// the indicator's own measured width so it keeps clearing the wedges
-// even as its font sizes change. Never let the clamp push it past the
-// pane's clipped left edge on narrow screens.
-function positionEnergyIndicator() {
-  const halfWidth = energyIndicatorEl.offsetWidth / 2;
-  const wedgeRadius = wedgeDiameterPx() / 2;
-  const isNarrow = window.innerWidth <= 480;
-  const gap = isNarrow ? 4 : 60;
-  const floor = isNarrow ? 10 : 30;
-  const x = Math.max(geo.cx + geo.rA - wedgeRadius - gap - halfWidth, floor);
-  energyIndicatorEl.style.left = `${x}px`;
-  energyIndicatorEl.style.top = `${geo.cy}px`;
 }
 
 function shortestDelta(angle, from) {
@@ -381,7 +361,7 @@ function renderResults() {
         `;
         card.addEventListener('click', () => {
           const m = r.id.match(/^(\d+)([AB])$/);
-          selectKey(parseInt(m[1], 10), m[2]);
+          selectKey(parseInt(m[1], 10), m[2], 0, { rotate: false });
         });
         list.appendChild(card);
       });
@@ -503,15 +483,23 @@ function rotateToEffective(velocity = 0, opts) {
   animateRotationTo(state.rotation + delta, velocity, opts);
 }
 
-function selectKey(num, letter, velocity = 0) {
+// `rotate: false` is used by the transitions-list cards (see renderResults)
+// — clicking a compatible key there swaps the results to show what's
+// compatible with it, but the wheel itself should only ever turn from a
+// direct drag/tap/arrow on the wheel, not as a side effect of browsing
+// the list.
+function selectKey(num, letter, velocity = 0, { rotate = true } = {}) {
   num = mod12(num);
   state.selectedNumber = num;
   state.selectedLetter = letter;
   localStorage.setItem('camelot:lastKey', keyId(num, letter));
   updateHighlights();
-  positionEnergyIndicator();
 
-  rotateToEffective(velocity);
+  if (rotate) {
+    rotateToEffective(velocity);
+  } else {
+    renderResults();
+  }
   scheduleResultsOpen();
 }
 

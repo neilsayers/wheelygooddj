@@ -485,8 +485,8 @@ body {
 
 .wedge {
   position: absolute;
-  width: clamp(70px, 18vw, 110px);
-  height: clamp(70px, 18vw, 110px);
+  width: clamp(76px, 19vw, 118px);
+  height: clamp(76px, 19vw, 118px);
   border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--surface-2);
@@ -574,59 +574,6 @@ body.emphasize-notes .wedge-note {
   border-color: rgba(255, 61, 129, 0.45);
   color: var(--text);
   box-shadow: 0 0 0 3px rgba(255, 61, 129, 0.1);
-}
-
-.energy-indicator {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 7px;
-  border-radius: 14px;
-  background: rgba(10, 13, 26, 0.6);
-  backdrop-filter: blur(3px);
-  pointer-events: none;
-  z-index: 400;
-}
-
-.energy-sign {
-  font-size: 40px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-dim);
-}
-
-.energy-plus {
-  color: var(--tier1);
-}
-
-.energy-label {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 26px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-@media (max-width: 480px) {
-  .energy-indicator {
-    gap: 3px;
-    padding: 6px 4px;
-    border-radius: 10px;
-  }
-
-  .energy-sign {
-    font-size: 13px;
-  }
-
-  .energy-label {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-  }
 }
 
 .wheel-controls {
