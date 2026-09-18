@@ -4,11 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0d1a">
-
-<!-- Google tag (gtag.js) — consent defaults to denied; consent.js grants
-     analytics_storage once the visitor accepts the cookie banner. -->
-<script src="ga-init.js"></script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RL06SEJEG8"></script>
 <title>Wheely Good DJ – Camelot Wheel Key Compatibility Tool</title>
 <meta name="description" content="Free Camelot wheel tool for DJs. Pick your track's key and instantly see every key that mixes cleanly with it, from safe neighbours to advanced energy moves.">
 <meta name="robots" content="index, follow">
@@ -35,7 +30,9 @@
 <meta name="apple-mobile-web-app-title" content="Wheely Good DJ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">
 {
@@ -49,6 +46,27 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" }
 }
 </script>
+
+<!-- Google tag consent defaults, inlined to avoid a blocking request.
+     Defaults to denied; consent.js grants analytics_storage once the
+     visitor accepts the cookie banner. The gtag.js library itself is
+     loaded lazily after the page finishes loading (see bottom of body) —
+     dataLayer queues these calls until it arrives. -->
+<script>
+'use strict';
+window.dataLayer = window.dataLayer || [];
+function gtag() { dataLayer.push(arguments); }
+gtag('consent', 'default', {
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied',
+});
+gtag('js', new Date());
+gtag('config', 'G-RL06SEJEG8');
+</script>
+<script src="consent.js" defer></script>
+<script src="app.js" defer></script>
 </head>
 <body>
 <div class="bg-blobs" aria-hidden="true">
@@ -130,7 +148,13 @@
   </div>
 </div>
 
-<script src="consent.js"></script>
-<script src="app.js"></script>
+<script>
+window.addEventListener('load', function () {
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-RL06SEJEG8';
+  document.head.appendChild(s);
+});
+</script>
 </body>
 </html>
