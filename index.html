@@ -31,7 +31,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap"></noscript>
 <link rel="stylesheet" href="style.css">
 <script type="application/ld+json">
@@ -47,24 +46,12 @@
 }
 </script>
 
-<!-- Google tag consent defaults, inlined to avoid a blocking request.
-     Defaults to denied; consent.js grants analytics_storage once the
-     visitor accepts the cookie banner. The gtag.js library itself is
-     loaded lazily after the page finishes loading (see bottom of body) —
-     dataLayer queues these calls until it arrives. -->
-<script>
-'use strict';
-window.dataLayer = window.dataLayer || [];
-function gtag() { dataLayer.push(arguments); }
-gtag('consent', 'default', {
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  analytics_storage: 'denied',
-});
-gtag('js', new Date());
-gtag('config', 'G-RL06SEJEG8');
-</script>
+<!-- Note: the site's CSP (see .htaccess) has no 'unsafe-inline' in
+     script-src, so every script here must be external, and links can't
+     use inline onload/onclick attributes either. -->
+<script src="ga-init.js" defer></script>
+<script src="gtag-loader.js" defer></script>
+<script src="font-loader.js" defer></script>
 <script src="consent.js" defer></script>
 <script src="app.js" defer></script>
 </head>
@@ -148,13 +135,5 @@ gtag('config', 'G-RL06SEJEG8');
   </div>
 </div>
 
-<script>
-window.addEventListener('load', function () {
-  var s = document.createElement('script');
-  s.async = true;
-  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-RL06SEJEG8';
-  document.head.appendChild(s);
-});
-</script>
 </body>
 </html>

@@ -31,8 +31,8 @@ function mod12(n) {
   return ((n - 1) % 12 + 12) % 12 + 1;
 }
 
-const BPM_MIN = 110;
-const BPM_MAX = 140;
+const BPM_MIN = 60;
+const BPM_MAX = 180;
 
 /**
  * A DJ playing a track off its natural tempo (no keylock) shifts its pitch
